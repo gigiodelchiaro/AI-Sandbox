@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed Forward Neural Network</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #architecture, #inputValues { margin-bottom: 10px; }
+        canvas { border: 1px solid black; }
+    </style>
+</head>
+<body>
+    <div>
+        <label for="architecture">Architecture:</label>
+        <input type="text" id="architecture" placeholder="Enter architecture (e.g., 3,4,2)">
+        <br>
+        <label for="inputValues">Input Values:</label>
+        <input type="text" id="inputValues" placeholder="Enter input values (comma-separated)">
+        <br>
+        <button onclick="generateNN()">Generate Neural Network & Render</button>
+        <button onclick="renderNN()">Render Neural Network</button>
+        <button onclick="performFeedForward()">Perform Feed Forward</button>
+        <br>
+        <label for="randomnessLevel">Randomness Level:</label>
+        <input type="range" id="randomnessLevel" min="0" max="1" step="0.01" value="0">
+        <button onclick="randomizeValues()">Randomize Values</button>
+    </div>
+    <canvas id="nnCanvas" width="800" height="600"></canvas>
+    <script src="nn_renderer.js"></script>
+    <script>
+        let nn;
+        let inputValues;
+        let randomnessLevel = 0;
+
+        function clearCanvas() {
+            const canvas = document.getElementById("nnCanvas");
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function generateNN() {
+            clearCanvas(); // Clear the canvas before rendering
+            const architectureInput = document.getElementById("architecture").value;
+            const architecture = architectureInput.split(",").map(Number);
+            nn = create_nn(architecture);
+            renderNN(); // Automatically render after generating
+        }
+
+        function renderNN() {
+            if (!nn) {
+                alert("Please generate the neural network first.");
+                return;
+            }
+
+            clearCanvas(); // Clear the canvas before rendering
+            nnRenderRaylib(nn, 0, 0, 800, 600); // Render the neural network
+        }
+
+        function performFeedForward() {
+            if (!nn) {
+                alert("Please generate the neural network first.");
+                return;
+            }
+
+            const inputValuesInput = document.getElementById("inputValues").value;
+            inputValues = inputValuesInput.split(",").map(Number);
+
+            if (!inputValues || inputValues.length !== nn.as[0].cols) {
+                alert("Please provide input values.");
+                return;
+            }
+
+            const output = feedForward(nn, inputValues);
+            console.log("Output:", output);
+        }
+
+        function randomizeValues() {
+            if (!nn) {
+                alert("Please generate the neural network first.");
+                return;
+            }
+
+            const maxRandomness = Number(document.getElementById("randomnessLevel").value);
+
+            for (let i = 0; i < nn.ws.length; i++) {
+                for (let j = 0; j < nn.ws[i].length; j++) {
+                    for (let k = 0; k < nn.ws[i][j].length; k++) {
+                        nn.ws[i][j][k] += (Math.random() * 2 - 1) * maxRandomness;
+                    }
+                }
+            }
+
+            for (let i = 0; i < nn.bs.length; i++) {
+                for (let j = 0; j < nn.bs[i].length; j++) {
+                    nn.bs[i][j][0] += (Math.random() * 2 - 1) * maxRandomness;
+                }
+            }
+
+            clearCanvas(); // Clear the canvas before re-rendering
+            nnRenderRaylib(nn, 0, 0, 800, 600); // Render the updated neural network
+        }
+    </script>
+</body>
+</html>
